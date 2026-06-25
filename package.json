@@ -1,0 +1,17 @@
+{
+  "name": "naeil-matchyeora",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@apps-in-toss/web-framework": "^2.9.2"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>내일을 맞혀라</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #0f1420; --bg-2: #161d2e; --card-bg: #1b2436;
+    --text: #f3f5f9; --muted: #8b94a8; --line: rgba(255,255,255,0.07);
+    --blue: #3b82f6; --gold: #fbbf24; --good: #22c55e; --bad: #ef4444;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+    display: flex; justify-content: center; overflow: hidden;
+  }
+  #app {
+    width: 100%; max-width: 480px; height: 100dvh; display: flex; flex-direction: column;
+    background: radial-gradient(120% 50% at 50% -10%, rgba(59,130,246,0.12), transparent 60%), var(--bg);
+  }
+  .scroll { flex: 1; overflow-y: auto; }
+  .screen { display: none; padding: 14px 16px 8px; }
+  .screen.active { display: block; }
+
+  /* 헤더 — 스트릭 강조 */
+  .hdr { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 14px; }
+  .hdr .streak-big { font-size: 18px; font-weight: 900; color: var(--gold); }
+  .hdr .streak-big small { color: var(--muted); font-weight: 700; font-size: 12px; display: block; margin-top: 2px; }
+  .hdr .total { text-align: right; font-size: 13px; color: var(--muted); font-weight: 800; }
+  .hdr .total b { display: block; font-size: 20px; color: var(--text); font-variant-numeric: tabular-nums; }
+
+  /* 어제 결과 — 압축 카드 */
+  #ystrip {
+    display: none; align-items: center; gap: 10px; padding: 12px 14px; margin-bottom: 14px;
+    border-radius: 13px; background: linear-gradient(135deg, rgba(34,197,94,0.14), rgba(59,130,246,0.08));
+    border: 1px solid var(--line);
+  }
+  #ystrip.show { display: flex; }
+  #ystrip .yt { flex: 1; }
+  #ystrip .yt .l1 { font-size: 12px; color: var(--muted); font-weight: 700; }
+  #ystrip .yt .l2 { font-size: 15px; font-weight: 900; margin-top: 2px; }
+  #ystrip .yt .l2 .g { color: var(--good); }
+  #double-btn {
+    flex-shrink: 0; padding: 10px 12px; border: none; border-radius: 10px;
+    background: var(--gold); color: #1a1206; font-size: 12.5px; font-weight: 900; cursor: pointer; font-family: inherit;
+  }
+  #double-btn:disabled { opacity: 0.6; }
+
+  /* 오늘 예측 타이틀 + 진행 칩 */
+  .today-title { font-size: 15px; font-weight: 900; }
+  .today-title span { color: var(--muted); font-weight: 700; font-size: 13px; margin-left: 6px; }
+  .chips { display: flex; gap: 7px; margin: 10px 0 12px; }
+  .chip {
+    padding: 7px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg-2);
+    color: var(--muted); font-size: 12.5px; font-weight: 800; cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+  .chip.done { color: var(--good); border-color: rgba(34,197,94,0.3); }
+  .chip.cur { background: rgba(59,130,246,0.18); border-color: var(--blue); color: #fff; }
+
+  /* 현재 문제 — 압도적으로 크게 */
+  .qcard { background: var(--card-bg); border: 1px solid var(--line); border-radius: 18px; padding: 22px 20px; }
+  .qcard .qhead { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .qcard .qemoji { font-size: 26px; }
+  .qcard .qtopic { font-size: 12px; font-weight: 800; color: var(--muted); background: rgba(255,255,255,0.06); padding: 3px 9px; border-radius: 999px; }
+  .qcard .qtext { font-size: 23px; font-weight: 900; line-height: 1.32; letter-spacing: -0.5px; margin-bottom: 20px; }
+  .opts { display: flex; gap: 12px; }
+  .opt {
+    flex: 1; padding: 22px 0; border-radius: 14px; border: 2px solid var(--line); background: var(--bg-2);
+    color: var(--text); font-size: 18px; font-weight: 900; cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .opt:active { transform: scale(0.97); }
+  .opt.sel { border-color: var(--blue); background: rgba(59,130,246,0.22); color: #fff; }
+  .qcard.locked .opt { opacity: 0.5; }
+  .qcard.locked .opt.sel { opacity: 1; }
+  .confirm-btn {
+    width: 100%; margin-top: 18px; padding: 17px; border: none; border-radius: 14px;
+    background: var(--blue); color: #fff; font-size: 16px; font-weight: 900; cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .confirm-btn:disabled { background: #2a3346; color: var(--muted); }
+  .confirm-btn:active:not(:disabled) { transform: scale(0.98); }
+  .lock-row { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .lock-row .lk { font-size: 13.5px; font-weight: 800; color: var(--good); }
+  .edit-btn { padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .yline { margin-top: 14px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+  .yline .ok { color: var(--good); } .yline .no { color: var(--bad); }
+  .olkill { margin-top: 14px; font-size: 12px; font-weight: 800; color: #f6d27a; }
+
+  .done-card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 18px; padding: 28px 20px; text-align: center; }
+  .done-card .e { font-size: 40px; } .done-card .t { font-size: 18px; font-weight: 900; margin-top: 8px; }
+  .done-card .s { font-size: 13px; color: var(--muted); margin-top: 6px; font-weight: 600; }
+
+  /* 기록 화면 */
+  .rec-title { font-size: 20px; font-weight: 900; margin-bottom: 14px; }
+  .rec-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .rec-box { flex: 1; background: var(--card-bg); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .rec-box .rl { font-size: 12px; color: var(--muted); font-weight: 700; }
+  .rec-box .rv { font-size: 24px; font-weight: 900; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .rec-sec { font-size: 13px; font-weight: 800; color: var(--muted); margin: 16px 2px 8px; }
+  .topic-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--card-bg); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; }
+  .topic-row .tn { flex: 1; font-size: 14px; font-weight: 800; }
+  .topic-row .tp { font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .topic-row .bar { flex-basis: 100px; height: 7px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .topic-row .bar i { display: block; height: 100%; background: var(--blue); }
+  .rec-empty { color: var(--muted); text-align: center; padding: 30px; font-weight: 600; }
+
+  /* 배너 + 하단 네비 */
+  #banner { width: 100%; min-height: 96px; flex-shrink: 0; }
+  .nav { display: flex; flex-shrink: 0; border-top: 1px solid var(--line); background: var(--bg-2); }
+  .nav button {
+    flex: 1; padding: 11px 0 14px; border: none; background: transparent; color: var(--muted);
+    font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit;
+  }
+  .nav button .ic { display: block; font-size: 20px; margin-bottom: 3px; }
+  .nav button.active { color: var(--blue); }
+  .loading { text-align: center; color: var(--muted); padding: 50px; font-weight: 600; }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div class="scroll">
+      <div class="screen active" id="screen-today">
+        <div class="hdr" id="hdr"></div>
+        <div id="ystrip">
+          <div class="yt"><div class="l1">어제 예측 결과</div><div class="l2" id="ystrip-main"></div></div>
+        </div>
+        <div class="today-title" id="today-title"></div>
+        <div class="chips" id="chips"></div>
+        <div id="current-card"><div class="loading">불러오는 중…</div></div>
+        <div class="olkill" id="olkill"></div>
+      </div>
+
+      <div class="screen" id="screen-record"></div>
+    </div>
+
+    <div id="banner"></div>
+    <div class="nav" id="nav">
+      <button data-screen="today" class="active"><span class="ic">🎯</span>오늘</button>
+      <button data-screen="record"><span class="ic">📊</span>기록</button>
+      <button data-screen="rank"><span class="ic">🏆</span>랭킹</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
