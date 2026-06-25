@@ -32,5 +32,10 @@
       ]
     }
   ],
-  "answers": null
+  "answers": {
+    "date": "2026-06-25",
+    "exchange": "내린다",
+    "kospi": "내린다",
+    "weather": "온다"
+  }
 }
