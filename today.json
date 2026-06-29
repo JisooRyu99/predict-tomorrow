@@ -1,5 +1,5 @@
 {
-  "date": "2026-06-26",
+  "date": "2026-06-29",
   "questions": [
     {
       "id": "exchange",
@@ -33,9 +33,9 @@
     }
   ],
   "answers": {
-    "date": "2026-06-25",
+    "date": "2026-06-26",
     "exchange": "내린다",
     "kospi": "내린다",
-    "weather": "안 온다"
+    "weather": "온다"
   }
 }
