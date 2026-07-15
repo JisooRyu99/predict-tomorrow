@@ -1,12 +1,12 @@
 {
-  "pendingDate": "2026-07-14",
+  "pendingDate": "2026-07-15",
   "base": {
-    "exchange": 1494.09,
-    "kospi": 6856.83
+    "exchange": 1495.49,
+    "kospi": 7284.41
   },
   "lastValues": {
-    "exchange": 1494.09,
-    "kospi": 6856.83,
-    "weather": 51.9
+    "exchange": 1495.49,
+    "kospi": 7284.41,
+    "weather": 4.6
   }
 }
